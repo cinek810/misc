@@ -1,0 +1,26 @@
+#This plugin is for plgrid usage. It's realizing POZO v1 
+#Author: Marcin Stolarek
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!Remember that this is development version and segmentation fault job_submit plugin will lead to segmentation fault of your slurmctld!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+1)create direcory in you slurm sources:
+mkdir src/plugin/job_submit/plg_pozo/
+
+2)copy files from repository
+cp job_submit_plg_pozo.c src/plugin/job_submit/plg_pozo/
+
+3) compile:
+gcc job_submit_plg_pozo.c -o job_submit_plg_pozo.so -shared  -I ../../../../../slurm-14.03.5/ -DHAVE_STDBOOL_H -fPIC -DLDAP_DEPRECATED -lldap; 
+
+4) copy shared library to you slurm library locatin:
+
+cp job_submit_plg_pozo.so /usr/local/slurm/14.03.5/lib/slurm/
+
+
+5) add in your configuration file:
+JobSubmitPlugin=plg_pozo
+
+
