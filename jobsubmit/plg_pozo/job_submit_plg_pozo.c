@@ -113,9 +113,8 @@ extern int job_submit(struct job_descriptor *job_desc, uint32_t submit_uid ,char
 	if (plgPrefixPartitionCmp == 0)
 	{
 		info("[ PLG ]:: set account '%s' for uid '%u'", job_desc->account, job_desc->user_id);
-//You may add your uid here to test functionality
-//		if (submit_uid==46022)
-//		{
+		if (submit_uid!=0)
+		{
 		pw = getpwuid (submit_uid);
 			if (!pw) 
 			{
@@ -137,13 +136,16 @@ extern int job_submit(struct job_descriptor *job_desc, uint32_t submit_uid ,char
 			debug2("[PLG-POZO]userGrants finished successfully");
 			for(i=0;userGrants[i]!=NULL;i++)
 			{
-				debug("[PLG-POZO] User grant is:%s",userGrants[i]);
+				debug("[PLG-POZO] User grant is:%s comparing with %s",job_desc->account,userGrants[i]);
 				if (strcmp(userGrants[i],job_desc->account)==0)
+				{
+					debug("[PLG-POZO] User %s allowd",job_desc->account);
 					return SLURM_SUCCESS;
+				}
 			}
-//		}
-//		else
-//			return SLURM_SUCCESS;
+		}
+		else
+			return SLURM_SUCCESS;
 
 	}
 	else
