@@ -139,7 +139,7 @@ extern int job_submit(struct job_descriptor *job_desc, uint32_t submit_uid ,char
 				debug("[PLG-POZO] User grant is:%s comparing with %s",job_desc->account,userGrants[i]);
 				if (strcmp(userGrants[i],job_desc->account)==0)
 				{
-					debug("[PLG-POZO] User %s allowd",job_desc->account);
+					debug("[PLG-POZO] User %s allowed",job_desc->account);
 					return SLURM_SUCCESS;
 				}
 			}
@@ -384,9 +384,13 @@ char ** getUserGrants(char *uid)
  //Alokujemy tablice wskaznikow do stringow, zaczynamy od jednego - na grant osobisty 
  char **userGrants = (char **)malloc( sizeof(char *));
  char * prvGrant=getPrivateGrant(uid);
- userGrants[0]=xstrdup(prvGrant);
 
- int currentGrant=1;
+ int currentGrant=0;
+ if ( prvGrant!=NULL)
+ {
+	 userGrants[0]=xstrdup(prvGrant);
+	 currentGrant=1;
+ }
 
  LDAPMessage * iterator=NULL;
  for(iterator=result;iterator!=NULL;iterator=ldap_next_entry(ld,iterator))
