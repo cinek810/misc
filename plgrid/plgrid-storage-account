@@ -1,38 +1,43 @@
 #!/bin/bash
-#Author: Marcin Stolarek(mstol@icm.edu.pl)
-#############################################
+
 function account_user {
-	SUBDIR=$1
-	USERPREFIX=$2
+        SUBDIR=$1
+        USERPREFIX=$2
+        KBLIMIT=$3
+        NRLIMIT=$4
+        ENVVAR=$5
 
-	cd $SUBDIR
+        cd $SUBDIR
 
 
-	DATE=$(date +%Y-%m%dT%H:%M:%S)
+        DATE=$(date +%Y-%m-%dT%H:%M:%S)
 
-	for USER in $(ls -d $USERPREFIX*)
-	do
-		KBUSED=$(du -ks ./$USER) | awk '{print $1}'
-		NRFILES=$(find ./$USER | wc -l )
-		echo "$DATE;$USER;;$SUBDIR/$USER;$KBUSED;$NRFILES;g_osobiste"
-	done
+        for USER in $(ls -d $USERPREFIX*)
+        do
+                KBUSED=$(du -ks ./$USER | awk '{print $1}')
+                NRFILES=$(find ./$USER | wc -l )
+                echo "$DATE;$USER;;$SUBDIR/$USER;$KBUSED;$NRFILES;$KBLIMIT;$NRLIMIT;$ENVVAR"
+        done
 }
 
 function account_group {
-	SUBDIR=$1
-	GROUPPREFIX=$2
+        SUBDIR=$1
+        GROUPPREFIX=$2
+        KBLIMIT=$3
+        NRLIMIT=$4
+        ENVVAR=$5
 
-	cd $SUBDIR
+        cd $SUBDIR
 
 
-	DATE=$(date +%Y-%m%dT%H:%M:%S)
+        DATE=$(date +%Y-%m-%dT%H:%M:%S)
 
-	for GROUP in $(ls -d $GROUPPREFIX*)
-	do
-		KBUSED=$(du -ks ./$GROUP) | awk '{print $1}'
-		NRFILES=$(find ./$GROUP | wc -l )
-		echo "$DATE;;$GROUP;$SUBDIR/$GROUP;$KBUSED;$NRFILES;g_wlasciwe"
-	done
+        for GROUP in $(ls -d $GROUPPREFIX*)
+        do
+                KBUSED=$(du -ks ./$GROUP | awk '{print $1}')
+                NRFILES=$(find ./$GROUP | wc -l )
+                echo "$DATE;;$GROUP;$SUBDIR/$GROUP;$KBUSED;$NRFILES;$KBLIMIT;$NRLIMIT;$ENVVAR"
+        done
 }
 
 
@@ -40,43 +45,43 @@ function account_group {
 if [ ! -f /var/run/plgrid-storage-account.lock ] || [ $(ps aux | grep $(cat /var/run/plgrid-storage-account.lock) | grep -v grep | wc -l  ) -eq 0 ]
 then
 
-#	if [ $(ps aux | grep $(cat /var/run/plgrid-storage-account.lock) | grep -v grep | wc -l  ) -eq 0 ]
-#	then
-#		echo "Pid file exist but process is not running - starting new run" >&2
-#	else
-#		exit 1
-#	fi
+#       if [ $(ps aux | grep $(cat /var/run/plgrid-storage-account.lock) | grep -v grep | wc -l  ) -eq 0 ]
+#       then
+#               echo "Pid file exist but process is not running - starting new run" >&2
+#       else
+#               exit 1
+#       fi
 
 
-	echo $BASHPID > /var/run/plgrid-storage-account.lock
+        echo $BASHPID > /var/run/plgrid-storage-account.lock
+
+        DATE=$(date +%Y%m%d)
+        ACCOUNTING_FILE=$1
+        ACCOUNTING_FILE=${ACCOUNTING_FILE:=/var/log/plgrid-storage-stats/$DATE}
+
+        #Accounting katalogu grup
+        account_group /icm/hydra/groups plgg 10000000 70000 PLG_GROUP_STORAGE > $ACCOUNTING_FILE
+
+        #Accounting $HOME dla plgrid
+        account_user /icm/hydra/home/grid plg  10000000 70000 PLG_USER_STORAGE >> $ACCOUNTING_FILE
 
 
-	ACCOUNTING_FILE=$1
-	ACCOUNTING_FILE=${ACCOUNTING_FILE:=/tmp/plgrid-storage-account.log}
-
-	#Accounting katalogu grup
-	account_group /icm/hydra/groups plgg > $ACCOUNTING_FILE
-
-	#Accounting $HOME dla plgrid
-	account_user /icm/hydra/home/grid plg > $ACCOUNTING_FILE
+        #Accounting lustre temp
+        account_user /icm/hydra/lustre/temp plg  10000000 70000 PLG_USER_STORAGE2 >> $ACCOUNTING_FILE
 
 
-	#Accounting lustre temp
-	account_user /icm/hydra/lustre/temp plg > $ACCOUNTING_FILE
+        #Accounting lustre permaanent
+        account_user /icm/hydra/lustre/permanent plg  10000000 70000 PLG_USER_STORAGE3 >> $ACCOUNTING_FILE
 
 
-	#Accounting lustre permaanent
-	account_user /icm/hydra/lustre/permanent plg > $ACCOUNTING_FILE
-
-
-	rm /var/run/plgrid-storage-account.lock
+        rm /var/run/plgrid-storage-account.lock
 else
-	echo -n "Lock file exis, process pid: " >&2
-	cat /var/run/plgrid-storage-account.lock >&2
+        echo -n "Lock file exis, process pid: " >&2
+        cat /var/run/plgrid-storage-account.lock >&2
 
-	ps aux | grep plgrid-storage-account  | grep -v grep >&2
-	
-	
-	exit 1
+        ps aux | grep plgrid-storage-account  | grep -v grep >&2
+
+
+        exit 1
 fi
 
