@@ -109,8 +109,8 @@ extern int job_submit(struct job_descriptor *job_desc, uint32_t submit_uid ,char
 	     job_desc->name, job_desc->partition, job_desc->qos,
 	     submit_uid, job_desc->time_limit, job_desc->user_id);
 
-	int plgPrefixPartitionCmp = strncmp(job_desc->partition, "plgrid", 6);
-	if (plgPrefixPartitionCmp == 0)
+	
+	if ( job_desc->partition!=NULL &&  strncmp(job_desc->partition, "plgrid", 6)== 0)
 	{
 		info("[ PLG ]:: set account '%s' for uid '%u'", job_desc->account, job_desc->user_id);
 		if (submit_uid!=0)
@@ -150,6 +150,7 @@ extern int job_submit(struct job_descriptor *job_desc, uint32_t submit_uid ,char
 	}
 	else
 		return SLURM_SUCCESS;
+
 	info("Refused account:%s for user:%s",job_desc->account,pw->pw_name);
 	return ESLURM_INVALID_ACCOUNT;
 }
@@ -430,6 +431,9 @@ char ** getUserGrants(char *uid)
  {
         debug("[PLG-POZO] User grant number:%d is: %s\n", i,userGrants[i]);
  }
+
+ 
+ ldap_unbind(ld);
 
 
  return userGrants;
