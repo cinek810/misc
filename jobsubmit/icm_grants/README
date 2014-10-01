@@ -1,0 +1,4 @@
+-) kompilacja
+gcc job_submit_icm_grants.c -o job_submit_icm_grants.so -shared -I ../../../../../slurm-14.03.5/ -DHAVE_STDBOOL_H -fPIC
+-) potem kopiowanie
+
