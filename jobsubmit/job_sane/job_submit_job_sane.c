@@ -141,7 +141,7 @@ int init()
 				debug("job_sane: user_name=root cannot be added to the accepted users - root is always accepted.");
 				continue;
 			}
-			users[number_of_users]=
+			users[number_of_users]=uid;
 			debug("job_sane:user_name=%s adding to accepted users with uid=%d",feature,users[number_of_users]);
 			number_of_users++;
 		}
