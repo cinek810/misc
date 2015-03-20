@@ -135,7 +135,13 @@ int init()
 		{
 			struct passwd* userData;
 			sscanf(line,"%*s %s",feature);
-			users[number_of_users]=getpwnam(feature)->pw_uid;
+			int uid=getpwnam(feature)->pw_uid;
+			if ( uid==0 )
+			{
+				debug("job_sane: user_name=root cannot be added to the accepted users - root is always accepted.");
+				continue;
+			}
+			users[number_of_users]=
 			debug("job_sane:user_name=%s adding to accepted users with uid=%d",feature,users[number_of_users]);
 			number_of_users++;
 		}
@@ -263,7 +269,7 @@ extern int job_submit(struct job_descriptor *job_desc, uint32_t submit_uid,
 			}
 			if(job_desc->features==NULL)	{
 				char * infoStr=xmalloc(1000);
-				sprintf(infoStr,"You're job specification is very likely suboptimal.\nYou specified: Nodes=%u, Cores=%d, which gives %d  / %d = %d cpus per node. There are no %d cpu nodes in this cluster, try to allocate full nodes.\0",job_desc->min_nodes,job_desc->min_cpus, job_desc->min_cpus,job_desc->min_nodes,job_desc->min_cpus/job_desc->min_nodes,cpus_per_node);
+				sprintf(infoStr,"Your job specification is very likely suboptimal.\nYou specified: Nodes=%u, Cores=%d, which gives %d  / %d = %d cpus per node. There are no %d cpu nodes in this cluster, try to allocate full nodes.\0",job_desc->min_nodes,job_desc->min_cpus, job_desc->min_cpus,job_desc->min_nodes,job_desc->min_cpus/job_desc->min_nodes,cpus_per_node);
 				info("job_sane: Refusing job with message:%s",infoStr);
 				*err_msg=infoStr;
 				return ESLURM_REQUESTED_NODE_CONFIG_UNAVAILABLE;
@@ -280,7 +286,7 @@ extern int job_submit(struct job_descriptor *job_desc, uint32_t submit_uid,
 					if(strcmp(spec_feature,tags[i])==0){
 						char * infoStr=xmalloc(1000);
 						if(cpus_per_node!=cores[i]){
-						sprintf(infoStr,"You're job specification is very likely suboptimal.\nYou specified: Nodes=%d, Cores=%d and feature=%s, which gives %d  / %d = %d cpus per node,while %s nodes have %d cpus per node.\0",job_desc->min_nodes,job_desc->min_cpus,spec_feature, job_desc->min_cpus,job_desc->min_nodes,cpus_per_node,spec_feature,cores[i]);
+						sprintf(infoStr,"Your job specification is very likely suboptimal.\nYou specified: Nodes=%d, Cores=%d and feature=%s, which gives %d  / %d = %d cpus per node,while %s nodes have %d cpus per node.\0",job_desc->min_nodes,job_desc->min_cpus,spec_feature, job_desc->min_cpus,job_desc->min_nodes,cpus_per_node,spec_feature,cores[i]);
 						info("job_sane: Refusing job with message:%s",infoStr);
 						*err_msg=infoStr;
 						return ESLURM_REQUESTED_NODE_CONFIG_UNAVAILABLE;
@@ -351,7 +357,7 @@ extern int job_modify(struct job_descriptor *job_desc,
 			}
 			if(job_desc->features==NULL)	{
 				char * infoStr=xmalloc(1000);
-				sprintf(infoStr,"You're job specification is very likely suboptimal.\nYou specified: Nodes=%d, Cores=%d, which gives %d  / %d = %d cpus per node. There are no %d cpu nodes in this cluster, try to allocate full nodes.\0",job_desc->min_nodes,job_desc->min_cpus, job_desc->min_cpus,job_desc->min_nodes,job_desc->min_cpus/job_desc->min_nodes,job_desc->min_cpus/job_desc->min_nodes);
+				sprintf(infoStr,"Your job specification is very likely suboptimal.\nYou specified: Nodes=%d, Cores=%d, which gives %d  / %d = %d cpus per node. There are no %d cpu nodes in this cluster, try to allocate full nodes.\0",job_desc->min_nodes,job_desc->min_cpus, job_desc->min_cpus,job_desc->min_nodes,job_desc->min_cpus/job_desc->min_nodes,job_desc->min_cpus/job_desc->min_nodes);
 				info("job_sane: job_modify:  Refusing job with message:%s",infoStr);
 				return ESLURM_REQUESTED_NODE_CONFIG_UNAVAILABLE;
 			}
@@ -368,7 +374,7 @@ extern int job_modify(struct job_descriptor *job_desc,
 						int cpus_per_node=job_desc->min_cpus/job_desc->min_nodes;
 						char * infoStr=xmalloc(1000);
 						if(cpus_per_node!=cores[i]){
-						sprintf(infoStr,"You're job specification is very likely suboptimal.\nYou specified: Nodes=%d, Cores=%d and feature=%s, which gives %d  / %d = %d cpus per node,while %s nodes have %d cpus per node.\0",job_desc->min_nodes,job_desc->min_cpus,spec_feature, job_desc->min_cpus,job_desc->min_nodes,cpus_per_node,spec_feature,cores[i]);
+						sprintf(infoStr,"Your job specification is very likely suboptimal.\nYou specified: Nodes=%d, Cores=%d and feature=%s, which gives %d  / %d = %d cpus per node,while %s nodes have %d cpus per node.\0",job_desc->min_nodes,job_desc->min_cpus,spec_feature, job_desc->min_cpus,job_desc->min_nodes,cpus_per_node,spec_feature,cores[i]);
 						info("job_sane: job_modify: Refusing job with message:%s",infoStr);
 						return ESLURM_REQUESTED_NODE_CONFIG_UNAVAILABLE;
 							
