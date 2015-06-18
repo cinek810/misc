@@ -1,0 +1,83 @@
+import cgi
+import datetime,os
+from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
+from SocketServer import ThreadingMixIn
+import threading
+
+
+class PostHandler(BaseHTTPRequestHandler):
+
+    def do_POST(self):
+        # Parse the form data posted
+        form = cgi.FieldStorage(
+            fp=self.rfile,
+            headers=self.headers,
+            environ={'REQUEST_METHOD':'POST',
+                     'CONTENT_TYPE':self.headers['Content-Type'],
+                     })
+
+        # Begin the response
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write('Client: %s\n' % str(self.client_address))
+        self.wfile.write('User-agent: %s\n' % str(self.headers['user-agent']))
+        self.wfile.write('Path: %s\n' % self.path)
+        self.wfile.write('Form data:\n')
+
+        # Echo back information about what was posted in the form
+        for field in form.keys():
+            field_item = form[field]
+            if field_item.filename:
+                # The field contains an uploaded file
+                file_data = field_item.file.read()
+                file_len = len(file_data)
+                today = str(datetime.date.today())
+                prefix="/tmp"
+                fileName=""
+                try:
+                        fileName=prefix+"/"+str(form["name"].value)+"/"+today
+                except KeyError:
+                        self.wfile.write("Name not specified?")
+                        self.send_response(200)
+
+                try:
+                        file_handler=open(fileName,'w')
+                        file_handler.write(file_data)
+			file_handler.close()
+                except IOError:
+                        self.wfile.write("I/O error, bad cluster name? If not contact hydra-admins\n")
+                        self.send_response(200)
+		else:
+			self.wfile.write("File uploaded to "+fileName+"\n")
+
+			del file_data
+
+			self.wfile.write("Processing data - adding uploaded records\n")
+
+			addingDataOut=os.popen("/var/www/html/xdmod/bin/xdmod-shredder -v -r"+form["name"].value+" -f slurm -i "+fileName)
+			self.wfile.write(addingDataOut.read());
+			ret=addingDataOut.close()
+			if ret==0:
+				self.wfile.write("Processing data - regenerating plots, etc.\n")
+				addingDataOut=os.popen("/var/www/html/xdmod/bin/xdmod-ingestor")
+				self.wfile.write(addingDataOut.read());
+				ret=addingDataOut.close()
+				if ret!=0:
+					self.wfile.write("Command execition failed\n")
+			
+			os.remove(fileName);
+
+
+
+
+        return
+
+class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
+    """Handle requests in a separate thread."""
+
+if __name__ == '__main__':
+    from BaseHTTPServer import HTTPServer
+    server = ThreadedHTTPServer(('192.168.69.12', 8888), PostHandler)
+    print 'Starting server, use <Ctrl-C> to stop'
+    server.serve_forever()
+
