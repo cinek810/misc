@@ -186,7 +186,9 @@ if __name__ == "__main__":
         			hnas.setUserNames(allUsers[uid])
         		else:
         			sys.stderr.write("===User consistent in LDAP and on HNAS:"+ str(allUsers[uid])+"\n")
+				#Remove user from allUsers - the list will containt only new users after whole loop
         			del allUsers[uid]
+				#Remove users from userOnHnas - the list will contain only users that are configured on hnas but they don't exist on LDAP
         			del usersOnHnas[uid]
         		
         	except KeyError:
@@ -215,11 +217,12 @@ if __name__ == "__main__":
 
         for (gid,group) in groupsOnHNAS.items():
         	try:
-        		if  allGroups[gid][0]!=groupsOnHNAS[gid][0] or allGroups[gid][2]!=usersOnHnas[gid][2]:
+        		if  allGroups[gid][0]!=groupsOnHNAS[gid][0] or allGroups[gid][2]!=groupsOnHNAS[gid][2]:
         			sys.stderr.write("Updating group "+str(group)+" to "+str(allGroups[gid])+"\n")
         			hnas.setGroupNames(allGroups[gid])
         		else:
         			sys.stderr.write("===Group consistent in LDAP and on HNAS:"+ str(allGroups[gid])+"\n")
+				#The same logic as with users:
         			del allGroups[gid]
         			del groupsOnHNAS[gid]
         		
@@ -229,7 +232,7 @@ if __name__ == "__main__":
         			del groupsOnHNAS[gid]
         			sys.stderr.write( "Deleting group from HNAS.Group not found in LDAP:"+str(group)+"\n")
         		else:
-        			sys.stderr.write( "===Probably local user, you should add it manually: "+str(group)+"\n")	
+        			sys.stderr.write( "===Probably local group, you should add it manually: "+str(group)+"\n")	
         		
         
 
