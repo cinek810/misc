@@ -60,12 +60,16 @@ if __name__ == "__main__":
 	parser.add_argument('-D','--bindas',dest="user", help="The user to bind as, as default will try to bind as currently loged user ("+user+").")
 	parser.add_argument('-S',"--start_time",dest="start_time",help="The starting date for wich data is requested. In format YYYY-MM-DD. Default is 2013-12-01.")
 	parser.add_argument('-E',"--end_time",dest="end_time",help="The ending date for wich data is requested. In format YYYY-MM-DD. Default is today ("+today+").")
+	parser.add_argument('-v',"--version",dest="version",action="store_true",help="Display version information")
 	args = vars(parser.parse_args())
 
 	if args['user'] is not  None:
 		user=args['user']
 
 	passwo=getpass.getpass("LDAP password for "+user+":" )
+
+	if args["version"]==True:
+		printf("get-account.py version 1.0. Author: Marcin Stolarek, current sources on https://github.com/cinek810/misc/tree/master/xdmod-getaccount")
 
 	if args["group"]:
 		dim="pi"
