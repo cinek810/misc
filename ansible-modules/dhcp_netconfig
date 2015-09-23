@@ -1,0 +1,82 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+import json
+import commands
+import re
+
+class DHCPNetConfig(object):
+	def __init__(self,module):
+		self.module=module;
+		rc,out,err = self.module.run_command(['ip', 'link', 'show', ])
+		if rc != 0:
+			raise Exception(err)
+		self.interfaces=[]
+		for line in out.split("\n"):
+			m=re.search('^\d+:\s+([a-zA-Z_\-\d]+):',line)
+			if m is not None  :
+				if m.group(1)!="lo":
+					self.interfaces.append(m.group(1))
+		
+		
+
+		
+	def get_interfaces(self):
+		return self.interfaces
+
+	def get_interface_dhcp_data(self,interface):
+		rc,out,err=self.module.run_command(["timeout","5","dhclient",'-d','-sf','/bin/env','-pf','/tmp/nonexistent','-1','-timeout','3',interface])
+
+		info=dict()
+		for line in out.split("\n"):
+			_splited=line.split("="); 
+			try:
+				info[_splited[0]]=_splited[1]
+				
+			except IndexError,KeyError:
+				pass	
+
+			
+		return info
+			
+
+
+def main():
+    global module
+    module = AnsibleModule(
+        argument_spec = dict(
+            get_facts=dict(default="yes", required=False),
+        ),
+        supports_check_mode = True,
+    )
+
+    ansible_facts_dict = {
+        "changed" : False,
+        "ansible_facts": {
+            }
+    }
+
+
+    rc=module.run_command(['dhclient', '--version']);
+    if rc==0:
+	    dhcpclient=DHCPNetConfig(module)
+
+	    interfaces=dhcpclient.get_interfaces()
+		
+	    for interface in interfaces:
+		info=dhcpclient.get_interface_dhcp_data(interface)
+		ansible_facts_dict['ansible_facts'][interface]=dict()
+		for key,value in info.iteritems():
+			try:
+				ansible_facts_dict['ansible_facts'][interface][key] = value;
+
+			except KeyError:
+				raise Exception("Problem with adding:"+interface+" "+str(info))
+
+    print json.dumps(ansible_facts_dict)
+
+from ansible.module_utils.basic import *
+from ansible.module_utils.facts import *
+main()
+
+
+#print "yes"
